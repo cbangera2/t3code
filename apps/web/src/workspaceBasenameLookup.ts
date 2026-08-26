@@ -52,7 +52,9 @@ export function pickWorkspaceBasenameMatch(
   // Chip paths are relative to the agent's cwd, so match the suffix wherever it lives.
   const suffixMatches = files.filter((entry) => hasSegmentSuffix(entry.path, target));
   if (suffixMatches.length === 1) return suffixMatches[0]?.path ?? null;
-  if (suffixMatches.length > 1) return null;
+  if (suffixMatches.length > 1) {
+    return target.includes("/") ? null : (suffixMatches[0]?.path ?? null);
+  }
   const foldedTarget = target.toLowerCase();
   const foldedSuffixMatches = files.filter((entry) =>
     hasSegmentSuffix(posixPath(entry.path).toLowerCase(), foldedTarget),

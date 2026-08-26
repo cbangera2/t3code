@@ -12,9 +12,12 @@ describe("pickWorkspaceBasenameMatch", () => {
   ];
 
   it("takes the first exact filename match, not the closest fuzzy one", () => {
-    expect(pickWorkspaceBasenameMatch("ChatView.tsx", entries)).toBe(
-      "apps/web/src/components/ChatView.tsx",
-    );
+    expect(
+      pickWorkspaceBasenameMatch("ChatView.tsx", [
+        ...entries,
+        { path: "apps/desktop/src/ChatView.tsx", kind: "file" },
+      ]),
+    ).toBe("apps/web/src/components/ChatView.tsx");
   });
 
   it("matches a slashed path as a suffix wherever it actually lives", () => {
@@ -101,5 +104,11 @@ describe("claimWorkspaceBasenameLookup", () => {
   it("stays valid while it is the only claim", () => {
     const only = claimWorkspaceBasenameLookup("thread-a");
     expect(only()).toBe(true);
+  });
+
+  it("keeps another thread's in-flight claim valid", () => {
+    const threadA = claimWorkspaceBasenameLookup("thread-a");
+    claimWorkspaceBasenameLookup("thread-b");
+    expect(threadA()).toBe(true);
   });
 });
