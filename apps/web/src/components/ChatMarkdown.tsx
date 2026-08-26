@@ -115,6 +115,7 @@ import { projectEnvironment } from "../state/projects";
 import { threadEnvironment } from "../state/threads";
 import {
   claimWorkspaceBasenameLookup,
+  normalizeWorkspaceLookupPath,
   pickWorkspaceBasenameMatch,
   WORKSPACE_BASENAME_LOOKUP_LIMIT,
 } from "../workspaceBasenameLookup";
@@ -1835,20 +1836,21 @@ function ChatMarkdown({
   );
   const findWorkspaceBasenameMatch = useCallback(
     async (workspaceRelativePath: string) => {
-      if (!cwd || environmentId === null) {
+      const lookupPath = normalizeWorkspaceLookupPath(workspaceRelativePath);
+      if (!cwd || environmentId === null || !lookupPath) {
         return null;
       }
       const result = await searchProjectEntries({
         environmentId,
         input: {
           cwd,
-          query: workspaceRelativePath,
+          query: lookupPath,
           limit: WORKSPACE_BASENAME_LOOKUP_LIMIT,
           kind: "file",
         },
       });
       return result._tag === "Success"
-        ? pickWorkspaceBasenameMatch(workspaceRelativePath, result.value.entries)
+        ? pickWorkspaceBasenameMatch(lookupPath, result.value.entries)
         : null;
     },
     [cwd, environmentId, searchProjectEntries],

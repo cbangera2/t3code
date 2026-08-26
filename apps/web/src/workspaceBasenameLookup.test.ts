@@ -50,6 +50,43 @@ describe("pickWorkspaceBasenameMatch", () => {
     ).toBe("BudgetLens/docs/plan.md");
   });
 
+  it("strips leading ./ so cwd-relative chips still suffix-match", () => {
+    expect(
+      pickWorkspaceBasenameMatch("./docs/plan.md", [
+        { path: "BudgetLens/docs/plan.md", kind: "file" },
+      ]),
+    ).toBe("BudgetLens/docs/plan.md");
+    expect(
+      pickWorkspaceBasenameMatch(".\\docs\\plan.md", [
+        { path: "BudgetLens/docs/plan.md", kind: "file" },
+      ]),
+    ).toBe("BudgetLens/docs/plan.md");
+  });
+
+  it("matches a slashed path ignoring case when the suffix is unique", () => {
+    expect(
+      pickWorkspaceBasenameMatch("Docs/Plan.md", [{ path: "project/docs/plan.md", kind: "file" }]),
+    ).toBe("project/docs/plan.md");
+  });
+
+  it("prefers the exactly-cased suffix over a case-only twin", () => {
+    expect(
+      pickWorkspaceBasenameMatch("docs/plan.md", [
+        { path: "a/Docs/Plan.md", kind: "file" },
+        { path: "b/docs/plan.md", kind: "file" },
+      ]),
+    ).toBe("b/docs/plan.md");
+  });
+
+  it("returns null when a case-folded suffix is ambiguous", () => {
+    expect(
+      pickWorkspaceBasenameMatch("Docs/Plan.md", [
+        { path: "a/docs/plan.md", kind: "file" },
+        { path: "c/DOCS/PLAN.md", kind: "file" },
+      ]),
+    ).toBeNull();
+  });
+
   it("ignores directories", () => {
     expect(
       pickWorkspaceBasenameMatch("components", [
