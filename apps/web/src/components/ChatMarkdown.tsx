@@ -19,6 +19,7 @@ import type {
   ServerProviderSkill,
   ThreadLinkedPullRequest,
 } from "@t3tools/contracts";
+import { scopedThreadKey } from "@t3tools/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -1863,7 +1864,7 @@ function ChatMarkdown({
       if (!threadRef) return;
       // Claimed on every open so a synchronous one supersedes a lookup already
       // in flight.
-      const isLatestLookup = claimWorkspaceBasenameLookup();
+      const isLatestLookup = claimWorkspaceBasenameLookup(scopedThreadKey(threadRef));
       const openAt = (path: string) =>
         useRightPanelStore.getState().openFile(threadRef, path, line);
       if (!cwd || environmentId === null) {

@@ -132,8 +132,8 @@ describe("pickWorkspaceBasenameMatch", () => {
 
 describe("claimWorkspaceBasenameLookup", () => {
   it("keeps only the newest claim, whatever order the lookups settle in", () => {
-    const first = claimWorkspaceBasenameLookup();
-    const second = claimWorkspaceBasenameLookup();
+    const first = claimWorkspaceBasenameLookup("thread-a");
+    const second = claimWorkspaceBasenameLookup("thread-a");
 
     // The older lookup answering last must not reopen the panel behind the
     // newer one.
@@ -142,7 +142,15 @@ describe("claimWorkspaceBasenameLookup", () => {
   });
 
   it("stays valid while it is the only claim", () => {
-    const only = claimWorkspaceBasenameLookup();
+    const only = claimWorkspaceBasenameLookup("thread-a");
     expect(only()).toBe(true);
+  });
+
+  it("does not let one thread's claim cancel another thread's lookup", () => {
+    const threadA = claimWorkspaceBasenameLookup("thread-a");
+    const threadB = claimWorkspaceBasenameLookup("thread-b");
+
+    expect(threadB()).toBe(true);
+    expect(threadA()).toBe(true);
   });
 });
