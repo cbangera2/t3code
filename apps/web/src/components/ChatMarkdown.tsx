@@ -1888,6 +1888,22 @@ function ChatMarkdown({
     },
     [cwd, findWorkspaceBasenameMatch, revealFileInFileManager],
   );
+  const openMarkdownFileInEditor = useCallback(
+    async (fileLinkMeta: MarkdownFileLinkMeta) => {
+      const workspaceRelativePath = fileLinkMeta.workspaceRelativePath;
+      const match = workspaceRelativePath
+        ? await findWorkspaceBasenameMatch(workspaceRelativePath)
+        : null;
+      if (!match || !cwd) {
+        return openInPreferredEditor(fileLinkMeta.targetPath);
+      }
+      const withPosition = fileLinkMeta.line
+        ? `${match}:${fileLinkMeta.line}${fileLinkMeta.column ? `:${fileLinkMeta.column}` : ""}`
+        : match;
+      return openInPreferredEditor(resolvePathLinkTarget(withPosition, cwd));
+    },
+    [cwd, findWorkspaceBasenameMatch, openInPreferredEditor],
+  );
   /* eslint-disable react/no-unstable-nested-components -- ReactMarkdown requires component
    * renderers that close over this message's metadata. useMemo keeps them stable until that
    * metadata changes. */
@@ -1922,7 +1938,7 @@ function ChatMarkdown({
           copyMarkdown={copyMarkdown}
           theme={resolvedTheme}
           threadRef={threadRef}
-          {...(canUseShellActions ? { onOpen: openInPreferredEditor } : {})}
+          {...(canUseShellActions ? { onOpen: () => openMarkdownFileInEditor(fileLinkMeta) } : {})}
           onOpenInPanel={openFileInPanel}
           openInEditorMenuLabel={preferredEditorMenuLabel}
           onReveal={
@@ -2218,7 +2234,7 @@ function ChatMarkdown({
     markdownFileLinkMetaByHref,
     onTaskListChange,
     openFileInPanel,
-    openInPreferredEditor,
+    openMarkdownFileInEditor,
     openChangeRequestLink,
     openExternalLinkInPreview,
     openMarkdownFileInPreview,

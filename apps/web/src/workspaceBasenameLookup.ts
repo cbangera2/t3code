@@ -21,12 +21,6 @@ function posixPath(path: string): string {
   return path.replaceAll("\\", "/");
 }
 
-function basenameOfPath(path: string): string {
-  const posix = posixPath(path);
-  const separatorIndex = posix.lastIndexOf("/");
-  return separatorIndex >= 0 ? posix.slice(separatorIndex + 1) : posix;
-}
-
 export function normalizeWorkspaceLookupPath(relativePath: string): string {
   return relativePath
     .trim()
@@ -60,14 +54,8 @@ export function pickWorkspaceBasenameMatch(
     hasSegmentSuffix(posixPath(entry.path).toLowerCase(), foldedTarget),
   );
   if (foldedSuffixMatches.length === 1) return foldedSuffixMatches[0]?.path ?? null;
-  if (foldedSuffixMatches.length > 1) return null;
-  const exact = files.find((entry) => basenameOfPath(entry.path) === target);
-  if (exact) return exact.path;
   // Folded matching covers casing that drifted from disk, but `FOO.ts` against
   // both `Foo.ts` and `foo.ts` has no right answer, so it resolves to nothing
   // rather than opening whichever the index ranked first.
-  const foldedMatches = files.filter(
-    (entry) => basenameOfPath(entry.path).toLowerCase() === foldedTarget,
-  );
-  return foldedMatches.length === 1 ? (foldedMatches[0]?.path ?? null) : null;
+  return null;
 }
