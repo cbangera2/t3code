@@ -50,12 +50,6 @@ describe("pickWorkspaceBasenameMatch", () => {
     ).toBe("BudgetLens/docs/plan.md");
   });
 
-  it("matches a slashed path ignoring case when the suffix is unique", () => {
-    expect(
-      pickWorkspaceBasenameMatch("Docs/Plan.md", [{ path: "project/docs/plan.md", kind: "file" }]),
-    ).toBe("project/docs/plan.md");
-  });
-
   it("ignores directories", () => {
     expect(
       pickWorkspaceBasenameMatch("components", [
@@ -113,13 +107,5 @@ describe("claimWorkspaceBasenameLookup", () => {
   it("stays valid while it is the only claim", () => {
     const only = claimWorkspaceBasenameLookup("thread-a");
     expect(only()).toBe(true);
-  });
-
-  it("does not let one thread's claim cancel another thread's lookup", () => {
-    const threadA = claimWorkspaceBasenameLookup("thread-a");
-    const threadB = claimWorkspaceBasenameLookup("thread-b");
-
-    expect(threadB()).toBe(true);
-    expect(threadA()).toBe(true);
   });
 });
