@@ -2,22 +2,8 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   claimWorkspaceBasenameLookup,
-  needsWorkspaceBasenameLookup,
   pickWorkspaceBasenameMatch,
 } from "./workspaceBasenameLookup";
-
-describe("needsWorkspaceBasenameLookup", () => {
-  it("flags bare filenames", () => {
-    expect(needsWorkspaceBasenameLookup("ChatView.tsx")).toBe(true);
-    expect(needsWorkspaceBasenameLookup("Makefile")).toBe(true);
-  });
-
-  it("leaves anything with a directory alone", () => {
-    expect(needsWorkspaceBasenameLookup("apps/web/src/components/ChatView.tsx")).toBe(false);
-    expect(needsWorkspaceBasenameLookup("apps\\web\\ChatView.tsx")).toBe(false);
-    expect(needsWorkspaceBasenameLookup("   ")).toBe(false);
-  });
-});
 
 describe("pickWorkspaceBasenameMatch", () => {
   const entries = [
@@ -29,6 +15,39 @@ describe("pickWorkspaceBasenameMatch", () => {
     expect(pickWorkspaceBasenameMatch("ChatView.tsx", entries)).toBe(
       "apps/web/src/components/ChatView.tsx",
     );
+  });
+
+  it("takes an exact workspace-relative path", () => {
+    expect(pickWorkspaceBasenameMatch("apps/web/src/components/ChatView.tsx", entries)).toBe(
+      "apps/web/src/components/ChatView.tsx",
+    );
+  });
+
+  it("matches a slashed path as a suffix wherever it actually lives", () => {
+    expect(
+      pickWorkspaceBasenameMatch("docs/GROUPS_PLAN.md", [
+        { path: "BudgetLens/docs/GROUPS_PLAN.md", kind: "file" },
+        { path: "docs/other.md", kind: "file" },
+      ]),
+    ).toBe("BudgetLens/docs/GROUPS_PLAN.md");
+  });
+
+  it("does not let a suffix match straddle a segment boundary", () => {
+    expect(
+      pickWorkspaceBasenameMatch("docs/plan.md", [{ path: "src/mydocs/plan.md", kind: "file" }]),
+    ).toBeNull();
+    expect(
+      pickWorkspaceBasenameMatch("plan.md", [{ path: "src/plan.md.bak", kind: "file" }]),
+    ).toBeNull();
+  });
+
+  it("prefers the exact suffix over a basename-only twin", () => {
+    expect(
+      pickWorkspaceBasenameMatch("docs/plan.md", [
+        { path: "other/plan.md", kind: "file" },
+        { path: "BudgetLens/docs/plan.md", kind: "file" },
+      ]),
+    ).toBe("BudgetLens/docs/plan.md");
   });
 
   it("ignores directories", () => {

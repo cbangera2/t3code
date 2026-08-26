@@ -115,7 +115,6 @@ import { projectEnvironment } from "../state/projects";
 import { threadEnvironment } from "../state/threads";
 import {
   claimWorkspaceBasenameLookup,
-  needsWorkspaceBasenameLookup,
   pickWorkspaceBasenameMatch,
   WORKSPACE_BASENAME_LOOKUP_LIMIT,
 } from "../workspaceBasenameLookup";
@@ -1836,7 +1835,7 @@ function ChatMarkdown({
   );
   const findWorkspaceBasenameMatch = useCallback(
     async (workspaceRelativePath: string) => {
-      if (!cwd || environmentId === null || !needsWorkspaceBasenameLookup(workspaceRelativePath)) {
+      if (!cwd || environmentId === null) {
         return null;
       }
       const result = await searchProjectEntries({
@@ -1854,8 +1853,9 @@ function ChatMarkdown({
     },
     [cwd, environmentId, searchProjectEntries],
   );
-  // A bare filename resolves to the workspace root, which is rarely where the
-  // file is, so ask the index before opening.
+  // The message's path is relative to wherever the agent was working, which is
+  // not always the workspace root the panel reads against, so every open goes
+  // through the index first; a miss falls back to the literal path.
   const openFileInPanel = useCallback(
     (workspaceRelativePath: string, line: number | undefined) => {
       if (!threadRef) return;
@@ -1864,7 +1864,7 @@ function ChatMarkdown({
       const isLatestLookup = claimWorkspaceBasenameLookup();
       const openAt = (path: string) =>
         useRightPanelStore.getState().openFile(threadRef, path, line);
-      if (!cwd || !needsWorkspaceBasenameLookup(workspaceRelativePath)) {
+      if (!cwd || environmentId === null) {
         openAt(workspaceRelativePath);
         return;
       }
@@ -1874,7 +1874,7 @@ function ChatMarkdown({
         openAt(match ?? workspaceRelativePath);
       })();
     },
-    [cwd, findWorkspaceBasenameMatch, threadRef],
+    [cwd, environmentId, findWorkspaceBasenameMatch, threadRef],
   );
   const revealMarkdownFileInFileManager = useCallback(
     async (fileLinkMeta: MarkdownFileLinkMeta) => {
