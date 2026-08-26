@@ -1904,6 +1904,18 @@ function ChatMarkdown({
     },
     [cwd, findWorkspaceBasenameMatch, openInPreferredEditor],
   );
+  const openMarkdownFileInBrowser = useCallback(
+    async (fileLinkMeta: MarkdownFileLinkMeta) => {
+      const workspaceRelativePath = fileLinkMeta.workspaceRelativePath;
+      const match = workspaceRelativePath
+        ? await findWorkspaceBasenameMatch(workspaceRelativePath)
+        : null;
+      return openMarkdownFileInPreview(
+        match && cwd ? resolvePathLinkTarget(match, cwd) : fileLinkMeta.filePath,
+      );
+    },
+    [cwd, findWorkspaceBasenameMatch, openMarkdownFileInPreview],
+  );
   /* eslint-disable react/no-unstable-nested-components -- ReactMarkdown requires component
    * renderers that close over this message's metadata. useMemo keeps them stable until that
    * metadata changes. */
@@ -1951,7 +1963,7 @@ function ChatMarkdown({
             threadRef &&
             isPreviewSupportedInRuntime() &&
             isBrowserPreviewFile(fileLinkMeta.filePath)
-              ? () => openMarkdownFileInPreview(fileLinkMeta.filePath)
+              ? () => openMarkdownFileInBrowser(fileLinkMeta)
               : undefined
           }
           className={className}
@@ -2237,7 +2249,7 @@ function ChatMarkdown({
     openMarkdownFileInEditor,
     openChangeRequestLink,
     openExternalLinkInPreview,
-    openMarkdownFileInPreview,
+    openMarkdownFileInBrowser,
     preferredEditorMenuLabel,
     resolveThreadPullRequest,
     resolvedTheme,
