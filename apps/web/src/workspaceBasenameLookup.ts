@@ -53,9 +53,11 @@ export function pickWorkspaceBasenameMatch(
   if (exactPath) return exactPath.path;
   // Agents reference files relative to their own cwd, which is not always the
   // workspace root, so a `docs/plan.md` chip has to match wherever that suffix
-  // actually lives. Index order (frecency) breaks ties.
+  // actually lives. An ambiguous suffix resolves to nothing so the caller opens
+  // the literal path instead of an arbitrarily ranked twin.
   const suffixMatches = files.filter((entry) => hasSegmentSuffix(entry.path, target));
-  if (suffixMatches.length > 0) return suffixMatches[0]?.path ?? null;
+  if (suffixMatches.length === 1) return suffixMatches[0]?.path ?? null;
+  if (suffixMatches.length > 1) return null;
   const foldedTarget = target.toLowerCase();
   const foldedSuffixMatches = files.filter((entry) =>
     hasSegmentSuffix(posixPath(entry.path).toLowerCase(), foldedTarget),
