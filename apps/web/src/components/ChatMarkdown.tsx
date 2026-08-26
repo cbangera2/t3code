@@ -1856,9 +1856,7 @@ function ChatMarkdown({
     },
     [cwd, environmentId, searchProjectEntries],
   );
-  // The message's path is relative to wherever the agent was working, which is
-  // not always the workspace root the panel reads against, so every open goes
-  // through the index first; a miss falls back to the literal path.
+  // Chip paths are relative to the agent's cwd, so every open goes through the index first.
   const openFileInPanel = useCallback(
     (workspaceRelativePath: string, line: number | undefined) => {
       if (!threadRef) return;

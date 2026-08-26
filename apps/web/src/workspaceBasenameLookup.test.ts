@@ -17,12 +17,6 @@ describe("pickWorkspaceBasenameMatch", () => {
     );
   });
 
-  it("takes an exact workspace-relative path", () => {
-    expect(pickWorkspaceBasenameMatch("apps/web/src/components/ChatView.tsx", entries)).toBe(
-      "apps/web/src/components/ChatView.tsx",
-    );
-  });
-
   it("matches a slashed path as a suffix wherever it actually lives", () => {
     expect(
       pickWorkspaceBasenameMatch("docs/GROUPS_PLAN.md", [

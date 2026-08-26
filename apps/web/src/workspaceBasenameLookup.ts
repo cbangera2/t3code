@@ -2,8 +2,7 @@
 // asking for a full listing on a single click.
 export const WORKSPACE_BASENAME_LOOKUP_LIMIT = 25;
 
-// One counter per thread: that thread's file panel is shared, so the newest
-// click wins. Other threads keep their own in-flight lookups.
+// Newest click wins within a thread. Other threads keep their own lookups.
 const latestLookupSequenceByScope = new Map<string, number>();
 
 /** Call the returned predicate when the search settles; false means a later click superseded it. */
@@ -28,7 +27,6 @@ function basenameOfPath(path: string): string {
   return separatorIndex >= 0 ? posix.slice(separatorIndex + 1) : posix;
 }
 
-/** Chip paths are cwd-relative; `./docs/plan.md` is the same lookup as `docs/plan.md`. */
 export function normalizeWorkspaceLookupPath(relativePath: string): string {
   return relativePath
     .trim()
@@ -51,10 +49,7 @@ export function pickWorkspaceBasenameMatch(
   const files = entries.filter((entry) => entry.kind === "file");
   const exactPath = files.find((entry) => posixPath(entry.path) === target);
   if (exactPath) return exactPath.path;
-  // Agents reference files relative to their own cwd, which is not always the
-  // workspace root, so a `docs/plan.md` chip has to match wherever that suffix
-  // actually lives. An ambiguous suffix resolves to nothing so the caller opens
-  // the literal path instead of an arbitrarily ranked twin.
+  // Chip paths are relative to the agent's cwd, so match the suffix wherever it lives.
   const suffixMatches = files.filter((entry) => hasSegmentSuffix(entry.path, target));
   if (suffixMatches.length === 1) return suffixMatches[0]?.path ?? null;
   if (suffixMatches.length > 1) return null;
