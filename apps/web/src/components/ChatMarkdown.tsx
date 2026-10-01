@@ -34,6 +34,7 @@ import type {
   ServerProviderSkill,
   ThreadPullRequestKey,
 } from "@t3tools/contracts";
+import { ProjectReadFileError } from "@t3tools/contracts";
 import { scopedThreadKey } from "@t3tools/client-runtime/environment";
 import { faviconUrlForOrigin } from "@t3tools/shared/favicon";
 import { githubMediaFetchUrl } from "@t3tools/shared/githubMedia";
@@ -55,6 +56,7 @@ import { inlineCodeFilePathCandidate } from "@t3tools/client-runtime/markdown-li
 import { mediaFileReference, mediaUrlReference } from "@t3tools/client-runtime/media-reference";
 import { mediaKindFromPath, mediaMimeTypeFromExtension } from "@t3tools/shared/filePreview";
 import * as Cause from "effect/Cause";
+import * as Schema from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import React, {
   Children,
@@ -278,6 +280,8 @@ export function shouldUseMarkdownFileBrowserPrimaryAction(input: {
 
 const EMPTY_MARKDOWN_SKILLS: ReadonlyArray<Pick<ServerProviderSkill, "name" | "displayName">> = [];
 const EMPTY_REMARK_PLUGINS: NonNullable<ReactMarkdownOptions["remarkPlugins"]> = [];
+
+const isProjectReadFileError = Schema.is(ProjectReadFileError);
 
 const ARTIFACT_TEMPLATE_ICON_BY_KIND = {
   document: FileTextIcon,
@@ -2569,10 +2573,17 @@ function useChatMarkdownState({
         environmentId,
         input: { cwd, relativePath: workspaceRelativePath },
       });
+      if (result._tag === "Success") return true;
       // readFile reads from disk rather than the search index, so gitignored
-      // files still report present. Binary files fail the read and count as
-      // missing here; a stat RPC would close that gap.
-      return result._tag === "Success";
+      // files still report present. Existing binary files (and directories)
+      // fail the read with a distinct reason but still prove the literal path
+      // exists, so the index must not hijack them. Only a genuinely missing
+      // file falls through to the indexed match.
+      const cause = squashAtomCommandFailure(result);
+      return (
+        isProjectReadFileError(cause) &&
+        (cause.failure === "binary_file" || cause.failure === "path_not_file")
+      );
     },
     [cwd, environmentId, readWorkspaceFile],
   );
