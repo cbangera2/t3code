@@ -22,10 +22,15 @@ function posixPath(path: string): string {
 }
 
 export function normalizeWorkspaceLookupPath(relativePath: string): string {
-  return relativePath
+  const normalized = relativePath
     .trim()
     .replaceAll("\\", "/")
     .replace(/^(?:\.\/)+/, "");
+  // Workspace-root links (`.` / `..`, from #12449) never resolve to a file.
+  // Return empty so callers skip the index lookup, matching the old
+  // `needsWorkspaceBasenameLookup` guard.
+  if (normalized === "." || normalized === "..") return "";
+  return normalized;
 }
 
 /** `a/b/c` matches `c` and `b/c` at a segment boundary, but not `abc`. */

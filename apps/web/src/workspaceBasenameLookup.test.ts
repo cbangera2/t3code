@@ -81,6 +81,12 @@ describe("pickWorkspaceBasenameMatch", () => {
     ).toBeNull();
   });
 
+  it("leaves workspace-root links alone", () => {
+    expect(pickWorkspaceBasenameMatch(".", entries)).toBeNull();
+    expect(pickWorkspaceBasenameMatch("..", entries)).toBeNull();
+    expect(pickWorkspaceBasenameMatch("   ", entries)).toBeNull();
+  });
+
   it("returns null when nothing matches the name", () => {
     expect(pickWorkspaceBasenameMatch("ChatView.tsx", [])).toBeNull();
     expect(
