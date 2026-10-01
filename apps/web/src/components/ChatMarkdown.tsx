@@ -2329,6 +2329,7 @@ function useChatMarkdownState({
   });
   const readWorkspaceFile = useAtomQueryRunner(projectEnvironment.readFile, {
     reportFailure: false,
+    refresh: true,
   });
   const openPreview = useAtomCommand(previewEnvironment.open, {
     reportFailure: false,
