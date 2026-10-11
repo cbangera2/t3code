@@ -2671,31 +2671,40 @@ function useChatMarkdownState({
   );
   const openMarkdownFileInEditor = useCallback(
     async (fileLinkMeta: MarkdownFileLinkMeta) => {
+      const isLatestLookup = threadRef
+        ? claimWorkspaceBasenameLookup(scopedThreadKey(threadRef))
+        : () => true;
       const workspaceRelativePath = fileLinkMeta.workspaceRelativePath;
       const match = workspaceRelativePath
         ? await findWorkspaceBasenameMatch(workspaceRelativePath)
         : null;
+      if (!isLatestLookup()) return AsyncResult.success(undefined);
       if (!match || !cwd) {
         return openInPreferredEditor(fileLinkMeta.targetPath);
       }
       const withPosition = fileLinkMeta.line
         ? `${match}:${fileLinkMeta.line}${fileLinkMeta.column ? `:${fileLinkMeta.column}` : ""}`
         : match;
+      if (!isLatestLookup()) return AsyncResult.success(undefined);
       return openInPreferredEditor(resolvePathLinkTarget(withPosition, cwd));
     },
-    [cwd, findWorkspaceBasenameMatch, openInPreferredEditor],
+    [cwd, findWorkspaceBasenameMatch, openInPreferredEditor, threadRef],
   );
   const openMarkdownFileInBrowser = useCallback(
     async (fileLinkMeta: MarkdownFileLinkMeta) => {
+      const isLatestLookup = threadRef
+        ? claimWorkspaceBasenameLookup(scopedThreadKey(threadRef))
+        : () => true;
       const workspaceRelativePath = fileLinkMeta.workspaceRelativePath;
       const match = workspaceRelativePath
         ? await findWorkspaceBasenameMatch(workspaceRelativePath)
         : null;
+      if (!isLatestLookup()) return AsyncResult.success(undefined);
       return openMarkdownFileInPreview(
         match && cwd ? resolvePathLinkTarget(match, cwd) : fileLinkMeta.filePath,
       );
     },
-    [cwd, findWorkspaceBasenameMatch, openMarkdownFileInPreview],
+    [cwd, findWorkspaceBasenameMatch, openMarkdownFileInPreview, threadRef],
   );
   const fileLinkChip = useCallback(
     (fileLinkMeta: MarkdownFileLinkMeta, copyMarkdown: string, mediaSource?: string) => {
